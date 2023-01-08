@@ -40,10 +40,10 @@ function giveWord(agent) {
     type: "POST",
     data: { agent: JSON.stringify(agent) },
     success: function (response) {
-    message = ""
+      message = ""
+      if (JSON.parse(response).length > 1) message = "Konačno rješenje: "
+      else message = "Dajem slovo "
       if (currentAgent == "a") {
-        if (response.length > 1) message = "Konačno rješenje: "
-        else message = "Dajem slovo "
         $(".dialog-2").css("display", "block");
         $(".right-point-2").css("display", "block");
         $("#agent-a-dialog").text(message + response.toUpperCase());
@@ -73,13 +73,11 @@ function checkWord(response) {
         $(".dialog-3").css("display", "none");
         $(".right-point-3").css("display", "none");
       }
-
-      debugger;
-      if (response.length > 3) {
+      if (JSON.parse(response).length > 1) {
         points = null
         if (currentAgent == "a") points = pointsA
         else points = pointsB
-        $("#demo").html(response.replace("   ", "&nbsp;&nbsp;&nbsp;"));
+        $("#demo").html(JSON.parse(response).replace("   ", "&nbsp;&nbsp;&nbsp;"));
         $("#host-dialog").text(
           "Agent " +
             currentAgent.toUpperCase() +
@@ -99,15 +97,18 @@ function checkWord(response) {
               " ne osvaja okrenuti iznos. Vrti drugi agent"
           );
           if (currentAgent == "a") {
-            if (pointsA > 0) $("#pointsA").text(parseInt(pointsA) - winPoints);
+            if (pointsA > 0) {
+              pointsA = parseInt(pointsA) - winPoints
+              $("#pointsA").text(pointsA);
+            }
             currentAgent = "b";
-            console.log("Sad treba vrtiejti" + currentAgent)
           } else {
-            if (pointsB > 0) $("#pointsB").text(parseInt(pointsB) - winPoints);
+            if (pointsB > 0) {
+              pointsB = parseInt(pointsB) - winPoints
+              $("#pointsB").text(pointsB);
+            }
             currentAgent = "a";
-            console.log("Sad treba vrtjeti " + currentAgent)
           }
-
           spinWheel();
           return;
         }, 2000);
@@ -120,19 +121,39 @@ function checkWord(response) {
               response +
               " i pogodio je."
           );
+          var wordCount = 1;
           for (var i = 0; i < word.length; i++) {
             if (
-              word[i].toLowerCase() == response.toLowerCase() &&
+              word[i].toLowerCase() == JSON.parse(response).toLowerCase() &&
               word[i] != " "
             ) {
               replacedWord =
                 replacedWord.substring(0, i * 2 + 1) + 
                 word[i] +
                 replacedWord.substring(i * 2 + 2);
+                if (currentAgent == "a") {
+                  pointsA = pointsA * wordCount;
+                  $("#pointsA").text(pointsA);
+                  wordCount = wordCount + 1;
+                }
+                if (currentAgent == "b") {
+                  pointsB = pointsB * wordCount;
+                  $("#pointsB").text(pointsB);
+                  wordCount = wordCount + 1;
+                }
             }
           }
-          //word = word.replace(/_/gi, " _");
           $("#demo").html(replacedWord.replace("   ", "&nbsp;&nbsp;&nbsp;"));
+          if(word == replacedWord.replace(/\s/g, "")) {
+            $("#host-dialog").text(
+              "Agent " +
+                currentAgent.toUpperCase() +
+                " je dobio točno rješenje. Čestitke"
+            );
+            setTimeout(function(){ if(!alert("Igra je završila i pobjednik je " + currentAgent.toUpperCase() + ". Kreće nova igra.")){
+              window.location.reload()
+            }}, 200)
+          }
           spinWheel();
         }, 2000);
       }
@@ -151,12 +172,9 @@ function spinWheel() {
 }
 
 function alertPrize(indicatedSegment) {
-  // Just alert to the user what happened.
-  // In a real project probably want to do something more interesting than this with the result.
   if (indicatedSegment.text == "LOOSE TURN") {
     if (currentAgent == "a") currentAgent = "b";
     else currentAgent = "a";
-    console.log(currentAgent);
     setTimeout(function () {
       $("#host-dialog").text(
         "Preskok. Agent " + currentAgent.toUpperCase() + " vrti sljedeći."
@@ -173,10 +191,10 @@ function alertPrize(indicatedSegment) {
       $("#pointsB").text(pointsB);
       currentAgent = "a";
     }
-    console.log(currentAgent);
     setTimeout(function () {
+      previousAgent = currentAgent == "a" ? "B" : "A"
       $("#host-dialog").text(
-        "Bankrot. Agent " + currentAgent.toUpperCase() +
+        "Bankrot." + " Agent " + previousAgent +
               " gubi sve novce. Agent " +
               currentAgent.toUpperCase() +
               " vrti sljedeći."
@@ -185,7 +203,6 @@ function alertPrize(indicatedSegment) {
     }, 2000);
   } else {
     winPoints = indicatedSegment.text;
-    console.log(currentAgent);
     if (currentAgent == "a") {
       pointsA = parseInt(pointsA) + parseInt(indicatedSegment.text);
       $("#pointsA").text(pointsA);

@@ -38,12 +38,10 @@ class Host:
     def checkWord(self, w):
         global word
         global maskedWord
-        if (len(w) > 1):
-            return w
+        if (len(w) > 3):
+            return json.dumps(w)
         if len(usedLetters) > 0:
             for usedLetter in usedLetters:
-                print(usedLetters)
-                print(w)
                 if usedLetter == w and w in usedLetters:
                     print("Slovo je već bilo odabrano!!")
                     return "-1"
@@ -53,7 +51,7 @@ class Host:
         w = w.replace('"','')
         for i, letter in enumerate(word):
             if letter != "_" and w.lower() == letter.lower():
-                return w
+                return json.dumps(w)
         return "-1"
 
 class Competitor:
@@ -78,16 +76,16 @@ class Competitor:
                 if (len(maskedWord) != len(word)):
                     listOfPossibleWords = [ elem for elem in listOfPossibleWords if elem != word]
             if (len(listOfPossibleWords) == 0):
-                return random.choice(string.ascii_letters)
+                return json.dumps(random.choice(string.ascii_letters))
             else:
                 if (len(listOfPossibleWords) == 1):
                     chosenWord = listOfPossibleWords[0]
-                    return chosenWord
+                    return json.dumps(chosenWord)
                 else:
                     chosenWord = listOfPossibleWords[0]
                     if(agent == 'a'):
                         if(len(excludedIndexesA) == len(chosenWord)):
-                            return chosenWord
+                            return json.dumps(chosenWord)
                         chosenIndex = random.choice([number for number in range(0, len(chosenWord)) if number not in excludedIndexesA])
                         excludedIndexesA.append(chosenIndex)
                         return json.dumps(chosenWord[chosenIndex])
@@ -110,10 +108,7 @@ def generateRandomWord():
 @app.route('/giveWord', methods=['POST'])
 def giveWord():
     agentTurn = request.form["agent"]
-    print(j1.loads(agentTurn))
-    print(j1.loads(agentTurn) == "b")
-    print(j1.loads(agentTurn) == "a")
-    if (j1.loads(agentTurn) == "a"):
+    if (json.loads(agentTurn) == "a"):
         return Agent1.giveWord('a')
     else:
         return Agent2.giveWord('b')
@@ -121,91 +116,7 @@ def giveWord():
 @app.route('/checkWord', methods=['POST'])
 def checkWord():
     letter = request.form["letter"]
-    return Boris.checkWord(j1.loads(letter))
-# def checkAgentDictionary(maskedWord):
-#     listOfChars = []
-#     listOfPossibleWords = []
-#     for character in maskedWord:
-#         if character != ' ' or character != '_':
-#             listOfChars.append(character)
-#     with open('rjecnik_agenta_a.csv', newline='', encoding='utf-8') as csvfile:
-#         spamreader = csv.reader(csvfile)
-#         for row in spamreader:
-#             currentRow = ', '.join(row)
-#             for character in currentRow:
-#                 if character in listOfChars and currentRow not in listOfPossibleWords:
-#                     listOfPossibleWords.append(currentRow)
-#         for word in listOfPossibleWords:
-#             if (len(maskedWord) != len(word)):
-#                 listOfPossibleWords = [ elem for elem in listOfPossibleWords if elem != word]
-#         if (len(listOfPossibleWords) == 0):
-#             return random.choice(string.ascii_letters)
-#         else:
-#             if (len(listOfPossibleWords) == 1):
-#                  chosenWord = listOfPossibleWords[0]
-#                  return chosenWord
-#             else:
-#                 chosenWord = listOfPossibleWords[0]
-#                 if(len(excludedIndexes) == len(chosenWord)):
-#                     return chosenWord
-#                 chosenIndex = random.choice([number for number in range(0, len(chosenWord)) if number not in excludedIndexes])
-#                 excludedIndexes.append(chosenIndex)
-#                 print(f"index:  {chosenIndex}")
-#                 return chosenWord[chosenIndex]
-
-
-# # def findWordInDictionary(maskedWord):
-# #     print(word)
-# #     print(maskedWord)
-# #     checkAgentDictionary(maskedWord)
-
-
-# def insertWord(word):
-#     with open('rjecnik_agenta_a.csv', 'a') as csvfile:
-#         writer = csv.writer(csvfile)
-#         writer.writerow(word)
-
-# getRandomWord()
-
-# #@app.route("/")
-# #def main():
-#     #def mainFunction():
-# while True:
-#     #time.sleep(3)
-#     if agentResponse == "":
-#         w = random.choice(string.ascii_letters.lower())
-#     else:
-#         w = agentResponse.lower()
-#     # if len(usedLetters) > 0:
-#     #     for usedLetter in usedLetters:
-#     #         if usedLetter == w and w in usedLetters:
-#     #             print("Slovo je već bilo odabrano!!")
-#     #         else:
-#     #             usedLetters.append(w)
-#     # else:
-#     #         usedLetters.append(w)
-#     #print(usedLetters)
-#     #print('Agent odabire slovo: ' + w)
-#     for i, letter in enumerate(word):
-#         if letter != "_" and w == letter.lower():
-#             maskedWord = maskedWord[:i] + letter + maskedWord[i+1:]
-#             print(maskedWord)
-#     agentResponse = checkAgentDictionary(maskedWord)
-#     print(f"agent response: {agentResponse}")
-#     if (len(agentResponse) > 1):
-#         print("Rješenje: " + agentResponse)
-#         if(agentResponse == word):
-#             print("POGODILI STE!!!!")
-#             exit()
-#         else:
-#             print("KRIVO!!!!")
-#             exit()
-#     #else:
-#         #print("Dajem slovo: " + agentResponse)
-#     if "_" not in maskedWord:
-#         break
-#         #koristiti ajax za dohvaćanje podataka
-#         #https://flask.palletsprojects.com/en/2.0.x/patterns/jquery/
+    return Boris.checkWord(json.loads(letter))
 
 @app.route('/')
 def main():
